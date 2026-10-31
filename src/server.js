@@ -10,6 +10,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { sendMessage, sendMessageStream, listModels, getModelQuotas, getSubscriptionTier, isValidModel } from './cloudcode/index.js';
 import { mountWebUI } from './webui/index.js';
+import omnirouteRoutes from './webui/omniroute-routes.js';
 import { config } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -132,6 +133,10 @@ app.use((req, res, next) => {
 
 // Mount WebUI (optional web interface for account management)
 mountWebUI(app, __dirname, accountManager);
+
+// Mount Omniroute API routes
+app.use('/api/omniroute', omnirouteRoutes);
+logger.info('[Server] Omniroute API routes mounted at /api/omniroute');
 
 /**
  * Parse error message to extract error type, status code, and user-friendly message
@@ -796,6 +801,45 @@ app.post('/v1/messages', async (req, res) => {
                 logger.debug(`  [${i}] ${msg.role}: ${contentTypes}`);
             });
         }
+
+        // TODO: Omniroute integration - Replace with actual routing when layer is ready
+        // This is a placeholder that maintains backward compatibility
+        // When task #2 (routing layer) is complete, uncomment and integrate:
+        //
+        // const omnirouteEnabled = config.omniroute?.enabled || false;
+        // if (omnirouteEnabled) {
+        //     try {
+        //         const { OmnirouteRouter } = await import('./routing/omniroute-router.js');
+        //         const router = new OmnirouteRouter(config.omniroute);
+        //         const provider = router.selectProvider(request.model, config);
+        //
+        //         if (provider) {
+        //             logger.info(`[Omniroute] Routing ${request.model} to provider: ${provider.name}`);
+        //             try {
+        //                 const response = await provider.sendMessage(request);
+        //                 return stream ? res.json(response) : res.json(response);
+        //             } catch (primaryError) {
+        //                 logger.error(`[Omniroute] Primary provider failed:`, primaryError);
+        //
+        //                 // Try fallback provider if configured
+        //                 const fallbackProvider = router.getFallbackProvider(request.model, config);
+        //                 if (fallbackProvider && FALLBACK_ENABLED) {
+        //                     logger.info(`[Omniroute] Falling back to provider: ${fallbackProvider.name}`);
+        //                     try {
+        //                         const response = await fallbackProvider.sendMessage(request);
+        //                         return stream ? res.json(response) : res.json(response);
+        //                     } catch (fallbackError) {
+        //                         logger.error(`[Omniroute] Fallback provider failed:`, fallbackError);
+        //                         // Continue to default handler below
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     } catch (routingError) {
+        //         logger.error(`[Omniroute] Routing error:`, routingError);
+        //         // Continue to default handler below
+        //     }
+        // }
 
         if (stream) {
             // Handle streaming response
